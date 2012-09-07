@@ -1,0 +1,64 @@
+Swirl
+*****
+
+   Swirl is the Erlang port of whiskers.js template library. 
+It focuses on template readability by limiting template logic.
+
+
+Usage
+=====
+
+The variable tag retrieve data from context by using dot notation.
+
+   {object.variable}
+
+The 'for' tag loops iterates over variable in array
+
+   {for variable in object.array}
+      <p>{variable}</p>
+   {/for}
+
+The 'if' tag displays section only if variable is truth.
+
+   {if object.variable}
+      <p>{object.variable}</p>
+   {else}
+      <p>No variable!</p>
+   {/if}
+
+The partial tag renders any template assigned to that variable using current context.
+
+   <div>{>partial}</div>
+
+
+Example
+======= 
+
+Compiled templates are rendered by
+
+   module:render(Context).
+
+Example template
+
+<article>
+  {if tags}
+    <ul id="tags">
+      {for tag in tags}
+      <li>{tag}</li>
+      {/for}
+    </ul>
+  {else}
+    <p>No tags!</p>
+  {/if}
+  <div>{content}</div>
+</article>
+
+Example context
+
+[
+   {title,   "Foundation"},
+   {author,  "Isaac Asimov"},
+   {tags,    ["real", "fiction"]},
+   {content, "Set in the year 0 F.E., The Psychohistorians opens on Trantor."}
+]
+  
