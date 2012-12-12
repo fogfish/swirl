@@ -89,8 +89,8 @@ uid(File, Opts) ->
       % name space is not defined, uid is filename
       undefined -> 
          filename:basename(File, filename:extension(File));
-      Ns        -> 
-         Ns ++ "_" ++ filename:basename(File, filename:extension(File))
+      Ns when is_atom(Ns) -> 
+         atom_to_list(Ns) ++ "_" ++ filename:basename(File, filename:extension(File))
    end.
 
 %%
