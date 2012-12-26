@@ -85,12 +85,23 @@ cc(File, Opts) ->
 %%
 %%
 uid(File, Opts) ->
-   case proplists:get_value(namespace, Opts) of
+   case proplists:get_value(module, Opts) of
       % name space is not defined, uid is filename
       undefined -> 
          filename:basename(File, filename:extension(File));
-      Ns when is_atom(Ns) -> 
-         atom_to_list(Ns) ++ "_" ++ filename:basename(File, filename:extension(File))
+      Mod when is_atom(Mod) -> 
+         atom_to_list(Mod);
+      Mod when is_tuple(Mod) ->
+         string:join(
+            lists:map(
+               fun
+               (X) when is_atom(X) -> atom_to_list(X);
+               (X) when is_list(X) -> X
+               end,
+               tuple_to_list(Mod)
+            ),
+            "_"
+         )
    end.
 
 %%
