@@ -26,7 +26,6 @@ get([Key], List) ->
    end;
 
 get([Key|T], List) ->
-   io:format("key=~p list=~p~n", [Key, List]),
    case lists:keyfind(Key, 1, List) of
    	false    -> [];
       {_, Val} -> get(T, Val)

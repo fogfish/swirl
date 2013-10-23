@@ -17,6 +17,8 @@ Definitions.
 
 WSS = [\x20\x09\x0A\x0D]+
 LIT = [^{}]+
+ANY = [^{]+
+VAR = [a-zA-Z.]+
 
 Rules.
 
@@ -26,24 +28,26 @@ Rules.
 
 %%
 %% if statement
-{if{WSS}not{WSS}{LIT}} : {token, {'ifnot', TokenLine, pp_ifnot(TokenChars)}}.
-{if{WSS}{LIT}} : {token, {'if', TokenLine, pp_if(TokenChars)}}.
+{if{WSS}not{WSS}{VAR}} : {token, {'ifnot', TokenLine, pp_ifnot(TokenChars)}}.
+{if{WSS}{VAR}} : {token, {'if', TokenLine, pp_if(TokenChars)}}.
 {else}         : {token, {'else',  TokenLine}}.
 {/if}          : {token, {'endif', TokenLine}}.
 
 %%
 %% for statement
-{for{WSS}{LIT}{WSS}in{WSS}{LIT}} : {token, {'for',    TokenLine, pp_for(TokenChars)}}.
+{for{WSS}{VAR}{WSS}in{WSS}{VAR}} : {token, {'for',    TokenLine, pp_for(TokenChars)}}.
 {/for}                           : {token, {'endfor', TokenLine}}.
 
 %%
 %% partials and assigment
-{>{LIT}} : {token, {'&&', TokenLine, pp_par(TokenChars)}}.
-{{LIT}}  : {token, {':=', TokenLine, pp_ref(TokenChars)}}.
+{>{VAR}} : {token, {'&&', TokenLine, pp_par(TokenChars)}}.
+{{VAR}}  : {token, {':=', TokenLine, pp_ref(TokenChars)}}.
 
 %%
 %% literals
 {LIT}    : {token, {text, TokenLine, TokenChars}}.
+{+{LIT}  : {token, {text, TokenLine, TokenChars}}.
+}+{LIT}  : {token, {text, TokenLine, TokenChars}}.
 
 %%
 %%
