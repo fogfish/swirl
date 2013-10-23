@@ -46,9 +46,9 @@ Rules.
 %%
 %% literals
 {LIT}    : {token, {text, TokenLine, TokenChars}}.
-{+{LIT}  : {token, {text, TokenLine, TokenChars}}.
-}+{LIT}  : {token, {text, TokenLine, TokenChars}}.
-
+{+       : {token, {text, TokenLine, TokenChars}}.
+}+       : {token, {text, TokenLine, TokenChars}}.
+   
 %%
 %%
 Erlang code.
