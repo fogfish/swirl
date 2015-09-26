@@ -11,5 +11,6 @@ deps/
 src/swirl_lexer.erl
 src/swirl_parser.erl
 rebar
+.rebar/
 swirl
 *.sublime-*

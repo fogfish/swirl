@@ -14,7 +14,7 @@
 %%   limitations under the License.
 %%
 Nonterminals	template expressions expression.
-Terminals		text ':=' 'if' 'ifnot' 'else' 'endif' 'for' 'endfor' '&&'.
+Terminals		text ':=' 'if' 'ifnot' 'else' 'endif' 'for' 'endfor' '&&' '$$'.
 Rootsymbol		template.
 
 
@@ -29,6 +29,7 @@ expressions -> expression expressions :
 expression  -> text : lit('$1').
 expression  -> ':=' : val('$1').
 expression  -> '&&' : include('$1').
+expression  -> '$$' : eval('$1').
 
 expression  -> 'if' expressions 'endif' : 
    ifelse('$1', '$2', {nil, line('$1')}).
@@ -101,6 +102,15 @@ val(Key) ->
          [key(Key),{var,0,'C'}]
       }]
    }.
+
+%%
+%% evaluate expression
+eval(Key) ->
+   {call, line(Key),
+         {remote,line(Key),{atom,line(Key),swirl_context},{atom,line(Key),eval}},
+         [key(Key),{var,0,'C'}]
+   }.
+
 
 %%
 %%

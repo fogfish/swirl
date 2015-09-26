@@ -42,6 +42,8 @@ Rules.
 %% partials and assigment
 {>{VAR}} : {token, {'&&', TokenLine, pp_par(TokenChars)}}.
 {{VAR}}  : {token, {':=', TokenLine, pp_ref(TokenChars)}}.
+{\.{LIT}} : {token, {'$$', TokenLine, pp_fun(TokenChars)}}.
+
 
 %%
 %% literals
@@ -112,6 +114,17 @@ pp_par(Tkn) ->
       )
    ).
 
+%%
+%% pre-processes function call
+pp_fun(Tkn) -> 
+   funbind(
+      string:strip(
+         lists:sublist(Tkn, 3, length(Tkn) - 3),
+         both,
+         16#20
+      )
+   ).
+
 
 %%
 %% parses dot-bind notation of key
@@ -122,3 +135,8 @@ dotbind(Var) ->
          string:tokens(Var, ".")
       )
    ).
+
+%%
+%% parses fun-bind notation of key
+funbind(Var) ->
+   lists:reverse(Var).
