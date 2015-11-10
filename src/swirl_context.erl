@@ -32,14 +32,12 @@ eval(Expr, _List) ->
 %%
 %% get value from context
 get([Key], List) ->
-   io:format("==> ~p~n", [Key]),
    case lists:keyfind(Key, 1, List) of
    	false    -> undefined;
       {_, Val} -> Val
    end;
 
 get([Key|T], List) ->
-   io:format("==> ~p~n", [Key]),
    case lists:keyfind(Key, 1, List) of
    	false    -> [];
       {_, Val} -> get(T, Val)
