@@ -67,11 +67,12 @@ line(Tkn)
 %% parses variable into key
 key(Tkn)
  when is_list(Tkn) ->
-   lists:foldl(
+   Key = lists:foldl(
       fun(X, Acc) -> {cons, 1, {string, 1, X}, Acc} end,
       {nil, 1},
       Tkn
-   );
+   ),
+   {cons,1,{var,1,'P'},Key};
 
 key(Tkn)
  when is_tuple(Tkn) ->
@@ -90,16 +91,16 @@ template(Mod) ->
 %%
 %% literal
 lit(Lit) ->
-   {string, line(Lit), value(Lit)}.
+   {string, line(Lit), scalar:s(value(Lit))}.
 
 %%
 %% get key from context
 val(Key) ->
    {call, line(Key),
-      {remote,line(Key),{atom,line(Key),swirl_context},{atom,line(Key),to_list}},
+      {remote,line(Key),{atom,line(Key),scalar},{atom,line(Key),s}},
       [{call, line(Key), 
-         {remote,line(Key),{atom,line(Key),swirl_context},{atom,line(Key),get}},
-         [key(Key),{var,0,'C'}]
+         {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),x}},
+         [key(Key),{var,line(Key),'C'}]
       }]
    }.
 
@@ -117,7 +118,7 @@ eval(Key) ->
 ifelse(Key, True, False) ->
    {'case', line(Key),
       {call, line(Key), 
-         {remote,line(Key),{atom,line(Key),swirl_context},{atom,line(Key),has}},
+         {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),a}},
          [key(Key),{var,0,'C'}]
       },
       [
@@ -166,7 +167,7 @@ loop(Var, Key, Loop) ->
             ]}
          },
          {call, line(Var), 
-            {remote,line(Var),{atom,line(Var),swirl_context},{atom,line(Var),get}},
+            {remote,line(Var),{atom,line(Var),swirl},{atom,line(Var),x}},
             [key(Key),{var,0,'C'}]
          }
       ]
@@ -177,7 +178,7 @@ loop(Var, Key, Loop) ->
 include(Key) ->
    {'case', line(Key),
       {call, line(Key), 
-         {remote,line(Key),{atom,line(Key),swirl_context},{atom,line(Key),get}},
+         {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),x}},
          [key(Key),{var,0,'C'}]
       },
       [
@@ -186,22 +187,29 @@ include(Key) ->
             [],
             [{nil,line(Key)}]
          },
-         {clause, line(Key),
-            [{var,line(Key),'X'}],
-            [[{call,line(Key),{atom,line(Key),is_list},[{var,line(Key),'X'}]}]], 
-            [{call, line(Key),
-               {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),r}},
-               [{var,line(Key),'X'},{var,line(Key),'C'}]
-            }]
-         },
+%         {clause, line(Key),
+%            [{var,line(Key),'X'}],
+%            [[{call,line(Key),{atom,line(Key),is_list},[{var,line(Key),'X'}]}]], 
+%            [{call, line(Key),
+%               {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),r}},
+%               [{var,line(Key),'X'},{var,line(Key),'C'}]
+%            }]
+%         },
+         %%
+         %% key value is atom, reference to template function  
          {clause, line(Key),
             [{var,line(Key),'X'}], 
             [[{call,line(Key),{atom,line(Key),is_atom},[{var,line(Key),'X'}]}]],
-            [{call, line(Key),
-               {remote,line(Key),{var,line(Key),'X'},{atom,line(Key),render}},
-               [{var,line(Key),'C'}]
-            }]
+            [
+               {match,line(Key),
+                  {var,line(Key),'F'},
+                  {call,line(Key),
+                     {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),x}},
+                     [{cons, 1, {atom,1,'>'},{var,line(Key),'X'}},{var,line(Key),'C'}]
+                  }
+               },
+               {call,line(Key),{var,line(Key),'F'},[{var,line(Key),'C'}]}
+            ]
          }
       ]
    }.
-

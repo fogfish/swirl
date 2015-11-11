@@ -1,11 +1,8 @@
 {application, swirl,
    [
       {description, "swirl template compiler"},
-      {vsn,         "0.2.0"},
-      {modules,     [
-         swirl_lexer,
-         swirl_parser
-      ]},
+      {vsn,         "0.4.0"},
+      {modules,     []},
       {registered,  []},
       {applications,[
          kernel,
