@@ -100,7 +100,7 @@ escape_9_test() ->
 ]).
 
 falsy_1_test() ->
-   <<>> = swirl:apply(<<"{false}">>, ?FALSY).
+   <<"false">> = swirl:apply(<<"{false}">>, ?FALSY).
 
 falsy_2_test() ->
    <<>> = swirl:apply(<<"{empty}">>, ?FALSY).
@@ -144,7 +144,8 @@ falsy_14_test() ->
 falsy_15_test() ->
    <<"x">> = swirl:apply(<<"{if not undefined.undefined}x{/if}">>, ?FALSY).
 
-
+%%
+%%
 for_1_test() ->
    <<"">> = swirl:apply(<<"{for x in arr}{x}{/for}">>, []).
 
@@ -152,7 +153,7 @@ for_2_test() ->
    <<"123">> = swirl:apply(<<"{for x in arr}{x}{/for}">>, [{arr, [1,2,3]}]).
 
 for_3_test() ->
-   <<"string">> = swirl:apply(<<"{for x in arr}{x}{/for}">>, [{arr, "string"}]).
+   <<"string">> = swirl:apply(<<"{for x in arr}{x}{/for}">>, [{arr, ["s","t","r","i","n","g"]}]).
 
 for_4_test() ->
    <<"">> = swirl:apply(<<"{for x in arr}{x.y}{/for}">>, []).
@@ -160,9 +161,11 @@ for_4_test() ->
 for_5_test() ->
    <<"123">> = swirl:apply(<<"{for x in arr}{x.y}{/for}">>, [{arr, [[{y,1}],[{y,2}],[{y,3}]]}]).
 
-%for_6_test() ->
-%      "123" = swirl:r("{for x in arr}{for y in x}{y.z}{/for}{/for}", [{arr, [[[{y,1}]],[[{y,2}]],[[{y,3}]]]}]).
+for_6_test() ->
+     <<"123">> = swirl:apply("{for x in arr}{for y in x}{y.z}{/for}{/for}", [{arr, [[[{z,1}]],[[{z,2}]],[[{z,3}]]]}]).
 
+%%
+%%
 if_1_test() ->
    <<"bar">> = swirl:apply(<<"{if foo}{foo}{/if}">>, [{foo, "bar"}]).
 
@@ -178,13 +181,14 @@ if_4_test() ->
 if_5_test() ->
    <<"bar">> = swirl:apply(<<"{if biz}blah{else}{foo}{/if}">>, [{foo, "bar"}]).
 
-
+%%
+%%
 partials_1_test() ->
    <<"title: foo">> = swirl:apply(<<"{>head}">>, [{head, "title: {title}"}, {title, "foo"}]).
 
 partials_2_test() ->
-   ok = swirl:c(head, "title: {title}"),
-   <<"title: foo">> = swirl:apply("{>head}", [{head, head}, {title, "foo"}]).
+   F = swirl:f(#{ref => swirl:f("title: {title}"), main => swirl:f("{>head}")}),
+   <<"title: foo">> = swirl:apply(F, main, [{main, [{head, ref}]}, {ref, [{title, "foo"}]}]).
 
 partials_3_test() ->
    <<"">> = swirl:apply(<<"{>head}">>, [{title, "foo"}]).

@@ -18,17 +18,16 @@
 -export([
    f/1,
    c/1,
-   x/2,
+   c/2,
    apply/2,
-   apply/3
+   apply/3,
+   include/2,
+   main/1
 ]).
 
 
-% -export([main/1]).
-% -export([c/2, cc/1, cc/2, r/2]).
-
 %%
-%% define template evaluator
+%% return partial application from input template  
 -spec(f/1 :: (list()) -> function()).
 
 f(T)
@@ -40,46 +39,35 @@ f(T)
       end
    end;
 
-f(T) ->
+f(T)
+ when is_map(T) ->
    fun(Id) ->
-      Funs = maps:map(fun(Key, Fun) -> Fun(Key) end, maps:without([Id], T)),
+      Funs = maps:map(fun(Key, Fun) -> Fun(Key) end, T),
       Root = maps:get(Id, T),
       fun(X) ->
-         swirl:apply(Root, maps:put('>', Funs, X))
+         swirl:apply(Root, Id, pair:insert('>', Funs, X))
       end
    end.
-
-
 
 %%
 %% compile template to abstract syntax tree 
 -spec(c/1 :: (list()) -> {ok, any()}).
+-spec(c/2 :: (atom(), list()) -> {ok, atom(), binary()}).
 
-c(T) ->
+c(T)
+ when is_binary(T) orelse is_list(T) ->
    {ok, Lex, _} = swirl_lexer:string(scalar:c(T)),
    swirl_parser:parse(Lex).
 
-%%
-%%
-x([undefined|Path], X) ->
-   pair:x(Path, X);
-x(Path, X) ->
-   pair:x(Path, X).
-
-
-%%
-%% r(Str, Ctx) -> Val
-%%
-%% render template with given context
-% r(Str, Ctx) ->
-%    Bind = erl_eval:add_binding('C', Ctx,
-%       erl_eval:new_bindings()
-%    ),
-%    {_, Val, _} = erl_eval:exprs(cc_code(Str), Bind),
-%    Val.
+c(Id, T)
+ when is_map(T) ->
+   cc_mod(Id, maps:map(fun cc_fun/2, T)).
 
 %%
 %% helper evaluate template
+-spec(apply/2 :: (function(), any()) -> binary()).
+-spec(apply/3 :: (function(), atom() | [atom()], any()) -> binary()).
+
 apply(Fun, X) ->
    swirl:apply(Fun, undefined, X).
 
@@ -91,65 +79,35 @@ apply(Fun, Y, X)
 apply(T, Y, X) ->
    swirl:apply(swirl:f(T), Y, X).
 
+%%%----------------------------------------------------------------------------   
+%%%
+%%% renderer helper interface (used from .yrl)
+%%%
+%%%----------------------------------------------------------------------------   
 
+%%
+%% partial  {>...}
+include(Key, X) ->
+   case pair:x(Key, X) of
+      undefined ->
+         <<>>;
+      Val when is_list(Val) ->
+         swirl:apply(Val, X);
+      
+      Val when is_atom(Val) ->
+         Fun = pair:x(['>', Val], X),
+         Fun(X);
+      
+      {Mod, Fun} ->
+         Mod:Fun(X)
+   end. 
 
-% %%
-% %% swirl -o Dir INPUT
-% main(["-o", Dir, Input]) ->
-%    % compile template into beam file
-%    cc(Input, [{outdir, Dir}]);
+%%
+%% command line utility
+-spec(main/1 :: (list()) -> ok).
 
-% main(["-j", Json, Input]) ->
-%    % bind a template with json
-%    {ok, S} = file:read_file(Input),
-%    {ok, J} = file:read_file(Json),
-%    R = r(
-%       binary_to_list(S), 
-%       jsx:decode(J, [{labels, atom}])
-%    ),
-%    io:format("~s", [R]);
-
-% main([]) ->
-%    io:format("Usage: swirl -o Dir INPUT\n").
-
-
-
-% %%
-% %% r(Str, Ctx) -> Val
-% %%
-% %% render template with given context
-% r(Str, Ctx) ->
-%    Bind = erl_eval:add_binding('C', Ctx,
-%       erl_eval:new_bindings()
-%    ),
-%    {_, Val, _} = erl_eval:exprs(cc_code(Str), Bind),
-%    Val.
-
-% %%
-% %% c(Uid, Str) -> ok
-% %%
-% %% compiles template from string
-% c(Uid, Str) ->
-%    {ok, Mod, Bin} = cc_mod(Uid, Str),
-%    {module, Uid}  = code:load_binary(Mod, [], Bin),
-%    ok.
-
-% %%
-% %% cc(File, Opts) -> ok
-% %%
-% %% compiles template from file
-% cc(File) ->
-%    cc(File, []).
-
-% cc(File, Opts) ->
-%    {ok, Bstr} = file:read_file(File),
-%    Uid = list_to_atom(uid(File, Opts)),
-%    {ok, Mod, Bin} = cc_mod(Uid, binary_to_list(Bstr)),
-%    {module, Uid}  = code:load_binary(Mod, [], Bin),
-%    case beam(File, Opts) of
-%       undefined -> ok;
-%       Beam      -> file:write_file(Beam, Bin)
-%    end.
+main(Args) ->
+   swirl_tool:main(Args).
 
 %%%----------------------------------------------------------------------------   
 %%%
@@ -177,64 +135,54 @@ eval(Fun, Scope, X) ->
          )
       )
    ),
-   Val.
+   erlang:iolist_to_binary(Val).
+
+%%
+%% compiles template into function
+cc_fun(f,  T) ->
+   {ok, Fun} = swirl:c(T),
+   {function,  0, f, 1,
+      [{clause, 0,  
+         [{var, 0, 'C'}], [],
+         [
+            {match,0,{var,0,'P'},{atom,0,undefined}},
+            {call, 0,
+               {remote, 0,{atom,0,erlang},{atom,0,iolist_to_binary}},
+               Fun
+            }
+         ]
+      }]
+   };
+cc_fun(Id, T) ->
+   {ok, Fun} = swirl:c(T),
+   {function,  0, Id, 1,
+      [{clause, 0,  
+         [{var, 0, 'C'}], [],
+         [
+            {match,0,{var,0,'P'},{atom,0,Id}},
+            {call, 0,
+               {remote, 0,{atom,0,erlang},{atom,0,iolist_to_binary}},
+               Fun
+            }
+         ]
+      }]
+   }.
+
+%%
+%% compiles template into module
+cc_mod(Id, T) ->
+   Mod = 
+      [
+         {attribute, 0, module, Id},
+         {attribute, 0, compile, export_all}
+      ] ++
+      [X || {_, X} <- maps:to_list(T)] ++
+      [
+         {eof, 0}
+      ],
+   compile:forms(Mod, []).
 
 
-% %%
-% %%
-% uid(File, Opts) ->
-%    case proplists:get_value(module, Opts) of
-%       % name space is not defined, uid is filename
-%       undefined -> 
-%          filename:basename(File, filename:extension(File));
-%       Mod when is_atom(Mod) -> 
-%          atom_to_list(Mod);
-%       Mod when is_tuple(Mod) ->
-%          string:join(
-%             lists:map(
-%                fun
-%                (X) when is_atom(X) -> atom_to_list(X);
-%                (X) when is_list(X) -> X
-%                end,
-%                tuple_to_list(Mod)
-%             ),
-%             "_"
-%          )
-%    end.
-
-% %%
-% %%
-% beam(File, Opts) ->
-%    case proplists:get_value(outdir, Opts) of
-%       undefined -> undefined;
-%       Dir       -> filename:join([Dir, uid(File, Opts) ++ ".beam"])
-%    end.
-
-
-% %%
-% %% cc_mod(Uid, Str) -> {ok, Mod, Bin}
-% %%
-% %% compiles template into module
-% cc_mod(Uid, Str) ->
-%    compile:forms(
-%       [
-%          {attribute, 0, module, Uid},
-%          {attribute, 0, compile, export_all},
-%          cc_fun(render, Str),
-%          {eof, 0}
-%       ], 
-%       []
-%    ).
-
-% %%
-% %% compiles template into function
-% cc_fun(Name, Str) ->
-%    {function,  0, Name, 1,
-%       [{clause, 0, 
-%       [{var, 0, 'C'}], [],
-%          cc_code(Str)
-%       }]
-%    }.
 
 
 

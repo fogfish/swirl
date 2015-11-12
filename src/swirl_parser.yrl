@@ -72,7 +72,20 @@ key(Tkn)
       {nil, 1},
       Tkn
    ),
-   {cons,1,{var,1,'P'},Key};
+   {'if',1, [
+      {clause,1,[],
+         [[{op,1,'=:=',{var,1,'P'},{atom,1,undefined}}]],
+         [Key]
+      },
+      {clause,1,[],
+         [[{call,1,{atom,1,is_atom},[{var,1,'P'}]}]],
+         [{cons,1,{var,1,'P'},Key}]
+      },
+      {clause,1,[],
+         [[{call,1,{atom,1,is_list},[{var,1,'P'}]}]],
+         [{op,1,'++',{var,1,'P'},Key}]
+      }
+   ]};
 
 key(Tkn)
  when is_tuple(Tkn) ->
@@ -99,7 +112,7 @@ val(Key) ->
    {call, line(Key),
       {remote,line(Key),{atom,line(Key),scalar},{atom,line(Key),s}},
       [{call, line(Key), 
-         {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),x}},
+         {remote,line(Key),{atom,line(Key),pair},{atom,line(Key),x}},
          [key(Key),{var,line(Key),'C'}]
       }]
    }.
@@ -118,7 +131,7 @@ eval(Key) ->
 ifelse(Key, True, False) ->
    {'case', line(Key),
       {call, line(Key), 
-         {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),a}},
+         {remote,line(Key),{atom,line(Key),pair},{atom,line(Key),a}},
          [key(Key),{var,0,'C'}]
       },
       [
@@ -158,7 +171,7 @@ loop(Var, Key, Loop) ->
                      {call, line(Var),
                         {var,line(Var),'F'},
                         [{call,line(Var),
-                           {remote,line(Var),{atom,line(Var),swirl_context},{atom,line(Var),set}},
+                           {remote,line(Var),{atom,line(Var),pair},{atom,line(Var),insert}},
                            [{atom,line(Var),value(Var)},{var,line(Var),'X'},{var,line(Var),'C'}]
                         }]
                      }
@@ -167,7 +180,7 @@ loop(Var, Key, Loop) ->
             ]}
          },
          {call, line(Var), 
-            {remote,line(Var),{atom,line(Var),swirl},{atom,line(Var),x}},
+            {remote,line(Var),{atom,line(Var),pair},{atom,line(Var),x}},
             [key(Key),{var,0,'C'}]
          }
       ]
@@ -176,40 +189,7 @@ loop(Var, Key, Loop) ->
 %%
 %%
 include(Key) ->
-   {'case', line(Key),
-      {call, line(Key), 
-         {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),x}},
-         [key(Key),{var,0,'C'}]
-      },
-      [
-         {clause, line(Key),
-            [{atom,line(Key),undefined}],
-            [],
-            [{nil,line(Key)}]
-         },
-%         {clause, line(Key),
-%            [{var,line(Key),'X'}],
-%            [[{call,line(Key),{atom,line(Key),is_list},[{var,line(Key),'X'}]}]], 
-%            [{call, line(Key),
-%               {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),r}},
-%               [{var,line(Key),'X'},{var,line(Key),'C'}]
-%            }]
-%         },
-         %%
-         %% key value is atom, reference to template function  
-         {clause, line(Key),
-            [{var,line(Key),'X'}], 
-            [[{call,line(Key),{atom,line(Key),is_atom},[{var,line(Key),'X'}]}]],
-            [
-               {match,line(Key),
-                  {var,line(Key),'F'},
-                  {call,line(Key),
-                     {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),x}},
-                     [{cons, 1, {atom,1,'>'},{var,line(Key),'X'}},{var,line(Key),'C'}]
-                  }
-               },
-               {call,line(Key),{var,line(Key),'F'},[{var,line(Key),'C'}]}
-            ]
-         }
-      ]
+   {call, line(Key), 
+      {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),include}},
+      [key(Key),{var,0,'C'}]
    }.
