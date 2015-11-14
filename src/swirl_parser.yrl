@@ -171,8 +171,8 @@ loop(Var, Key, Loop) ->
                      {call, line(Var),
                         {var,line(Var),'F'},
                         [{call,line(Var),
-                           {remote,line(Var),{atom,line(Var),pair},{atom,line(Var),insert}},
-                           [{atom,line(Var),value(Var)},{var,line(Var),'X'},{var,line(Var),'C'}]
+                           {remote,line(Var),{atom,line(Var),swirl},{atom,line(Var),context}},
+                           [{var,line(Var),'P'},{atom,line(Var),value(Var)},{var,line(Var),'X'},{var,line(Var),'C'}]
                         }]
                      }
                   ] 

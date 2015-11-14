@@ -187,11 +187,27 @@ partials_1_test() ->
    <<"title: foo">> = swirl:apply(<<"{>head}">>, [{head, "title: {title}"}, {title, "foo"}]).
 
 partials_2_test() ->
-   F = swirl:f(#{ref => swirl:f("title: {title}"), main => swirl:f("{>head}")}),
-   <<"title: foo">> = swirl:apply(F, main, [{main, [{head, ref}]}, {ref, [{title, "foo"}]}]).
+   Fun = swirl:f(#{
+      main => swirl:f("{>head}"),
+      body => swirl:f("title: {title}")
+   }),
+   <<"title: foo">> = swirl:apply(Fun, main, [
+      {main, [{head, body}]}, 
+      {body, [{title, "foo"}]}
+   ]).
 
 partials_3_test() ->
    <<"">> = swirl:apply(<<"{>head}">>, [{title, "foo"}]).
    
+partials_4_test() ->
+   Fun = swirl:f(#{
+      main => swirl:f("{>head}"),
+      body => swirl:f("{for x in list}{x}{/for}")
+   }),
+   <<"123">> = swirl:apply(Fun, main, #{
+      main => #{head => body},
+      body => #{list => [1,2,3]}
+   }).
+
 
 
