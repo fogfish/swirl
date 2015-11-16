@@ -52,7 +52,7 @@ swirl:apply("I am {name}!", host,
 The language is the smallest mustachioed template system limited to 4 statements:
 * variable `{a}`
 * condition `{if a} ... {else} ... {/if}`
-* loop `{for x in a} ... {/for}`
+* foreach `{for x in a} ... {/for}`
 * partial `{>a}`
 
 [see template](test/article.swirl)
@@ -81,12 +81,20 @@ The `if` statements displays section only if variable is truth. The statements s
    {/if}
 ```
 
-### loop
+### foreach
 
 The `for` statements iterates over variables in array. 
 
 ```
    {for x in a.b.c}
+      <p>{x}</p>
+   {/for}
+```
+
+The loop context defines special variable `@head` and `@tail` to 
+```
+   {for x in a.b.c}
+      {if @head.x}<h4>***</h4>{/if}
       <p>{x}</p>
    {/for}
 ```

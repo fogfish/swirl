@@ -1,10 +1,14 @@
 <article>
-  {if tags}
-    <ul id="tags">
+   {if tags} 
       {for tag in tags}
-      <li>{tag}</li>
+         {if @head.tag}
+         <ul id="tags">
+         {/if}
+         <li>{tag}</li>
+         {if @tail.tag}
+         </ul>
+         {/if}
       {/for}
-    </ul>
   {else}
     <p>No tags!</p>
   {/if}

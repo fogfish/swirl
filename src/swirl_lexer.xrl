@@ -18,7 +18,7 @@ Definitions.
 WSS = [\x20\x09\x0A\x0D]+
 LIT = [^{}]+
 ANY = [^{]+
-VAR = [a-zA-Z._]+
+VAR = [a-zA-Z._@]+
 
 Rules.
 

@@ -21,8 +21,6 @@
    c/2,
    apply/2,
    apply/3,
-   include/2,
-   context/4,
    main/1
 ]).
 
@@ -79,71 +77,6 @@ apply(Fun, Y, X)
 
 apply(T, Y, X) ->
    swirl:apply(swirl:f(T), Y, X).
-
-%%%----------------------------------------------------------------------------   
-%%%
-%%% renderer helper interface (used from .yrl)
-%%%
-%%%----------------------------------------------------------------------------   
-
-%%
-%% partial  {>...}
-include(Key, X) ->
-   case pair:x(Key, X) of
-      undefined ->
-         <<>>;
-      Val when is_list(Val) ->
-         swirl:apply(Val, X);
-      
-      Val when is_atom(Val) ->
-         Fun = pair:x(['>', Val], X),
-         Fun(X);
-      
-      {Mod, Fun} ->
-         Mod:Fun(X)
-   end. 
-
-%%
-%% update context
-context(undefined, Key, Val, X)
- when is_map(X) ->
-   maps:put(Key, Val, X);   
-context(undefined, Key, Val, X)
- when is_list(X) ->
-   lists:keystore(Key, 1, X, {Key, Val});
-
-
-context([], Key, Val, undefined) ->
-   maps:put(Key, Val, #{});
-context([], Key, Val, X)
- when is_map(X) ->
-   maps:put(Key, Val, X);
-context([], Key, Val, X)
- when is_map(X) ->
-   lists:keystore(Key, 1, X, {Key, Val});
-
-context([Prefix|Tail], Key, Val, X)
- when is_map(X) ->
-   Value = case pair:x(Prefix, X) of
-      undefined ->
-         context(Tail, Key, Val, #{});
-      Child     ->
-         context(Tail, Key, Val, Child)
-   end,
-   maps:put(Prefix, Value, X);
-
-context([Prefix|Tail], Key, Val, X)
- when is_list(X) ->
-   Value = case pair:x(Prefix, X) of
-      undefined ->
-         context(Tail, Key, Val, #{});
-      Child     ->
-         context(Tail, Key, Val, Child)
-   end,
-   lists:keystore(Prefix, 1, X, {Prefix, Value});
-
-context(Prefix, Key, Val, X) ->
-   context([Prefix], Key, Val, X).
 
 
 %%

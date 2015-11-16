@@ -100,11 +100,11 @@ template(Mod) ->
       [Mod]
    }].
 
-
 %%
 %% literal
 lit(Lit) ->
    {string, line(Lit), scalar:s(value(Lit))}.
+
 
 %%
 %% get key from context
@@ -121,8 +121,8 @@ val(Key) ->
 %% evaluate expression
 eval(Key) ->
    {call, line(Key),
-         {remote,line(Key),{atom,line(Key),swirl_context},{atom,line(Key),eval}},
-         [key(Key),{var,0,'C'}]
+      {remote,line(Key),{atom,line(Key),swirl_lang},{atom,line(Key),eval}},
+      [key(Key),{var,0,'C'}]
    }.
 
 
@@ -152,44 +152,53 @@ for(For, Loop, Empty) ->
 %%
 %%
 loop(Var, Key, Loop) ->
-   {call, line(Var),
-      {remote,line(Var),{atom,line(Var),lists},{atom,line(Var),map}},
+   {call, line(Key), 
+      {remote,line(Key),{atom,line(Key),swirl_lang},{atom,line(Key),foreach}},
       [
-         {'fun', line(Var),
+         key(Key),
+         subject([value(Var)]),
+         {'fun', line(Var), 
             {clauses, [
-               {clause, line(Var), 
-                  [{var,line(Var),'X'}], [],
-                  [
-                     {match, line(Var),
-                        {var, line(Var), 'F'},
-                        {'fun', line(Var), 
-                           {clauses, [
-                              {clause,line(Var),[{var,line(Var),'C'}],[],[Loop]}
-                           ]}
-                        }
-                     },
-                     {call, line(Var),
-                        {var,line(Var),'F'},
-                        [{call,line(Var),
-                           {remote,line(Var),{atom,line(Var),swirl},{atom,line(Var),context}},
-                           [{var,line(Var),'P'},{atom,line(Var),value(Var)},{var,line(Var),'X'},{var,line(Var),'C'}]
-                        }]
-                     }
-                  ] 
-               }
+               {clause,line(Var),[{var,line(Var),'C'}],[],[Loop]}
             ]}
          },
-         {call, line(Var), 
-            {remote,line(Var),{atom,line(Var),pair},{atom,line(Var),x}},
-            [key(Key),{var,0,'C'}]
-         }
+         {var,0,'C'}
       ]
    }.
+
 
 %%
 %%
 include(Key) ->
    {call, line(Key), 
-      {remote,line(Key),{atom,line(Key),swirl},{atom,line(Key),include}},
+      {remote,line(Key),{atom,line(Key),swirl_lang},{atom,line(Key),include}},
       [key(Key),{var,0,'C'}]
    }.
+
+%%
+%% subject identity - uses subject and scope/prefix to build globally unique id
+subject(Id) when is_list(Id) ->
+   Key = lists:foldl(
+      fun(X, Acc) -> 
+         {cons, 0, {string, 0, X}, Acc} 
+      end,
+      {nil, 0},
+      Id
+   ),
+   {'if', 0, [
+      {clause, 0, [],
+         [[{op, 0, '=:=', {var,1,'P'}, {atom,1,undefined}}]],
+         [Key]
+      },
+      {clause, 0, [],
+         [[{call, 0, {atom, 0, is_atom}, [{var, 0, 'P'}]}]],
+         [{cons, 0, {var,0,'P'}, Key}]
+      },
+      {clause, 0, [],
+         [[{call,0, {atom, 0, is_list}, [{var,1,'P'}]}]],
+         [{op, 0, '++', {var, 0,'P'}, Key}]
+      }
+   ]}.
+
+
+
