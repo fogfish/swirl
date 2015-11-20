@@ -106,16 +106,41 @@ context([Prefix|Tail], Val, X)
 %%
 %% Note: dangerous (used for evaluate purpose only)
 eval(Expr, X) ->
-   eval(pair:x('@eval', X), Expr, X).
-
-eval(undefined, _Expr, _X) ->
-   [];
-eval(true, Expr, _X) ->
    {ok, Scanned, _} = erl_scan:string(Expr),
    {ok, Parsed} = erl_parse:parse_exprs(Scanned),
-   case erl_eval:exprs(Parsed, []) of
-      {value, Value, _} when is_list(Value) orelse is_binary(Value) ->
-         Value;
-      _ ->
-         []
+   case whitelist(X, Parsed) of
+      []    ->
+         [];
+      Exprs ->
+         case erl_eval:exprs(Exprs, []) of
+            {value, Value, _} when is_list(Value) orelse is_binary(Value) ->
+               Value;
+            _ ->
+               []
+         end
    end.
+
+whitelist(X, [Op | Script])
+ when element(1, Op) =:= call ->
+   case element(3, Op) of
+      {var,  _, _} ->
+         whitelist(X, Script);
+      {atom, _, _} ->
+         whitelist(X, Script);
+      {remote, _, {atom, _, Mod}, {atom, _, Fun}} ->
+         case pair:x(['@eval', Mod, Fun], X) of
+            true ->
+               [Op | whitelist(X, Script)];
+            _    ->
+               whitelist(X, Script)
+         end
+   end;
+
+whitelist(X, [Op | Script])
+ when element(1, Op) =:= 'fun' ->
+   whitelist(X, Script);
+
+whitelist(_, []) ->
+   [].
+
+
