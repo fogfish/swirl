@@ -140,6 +140,10 @@ whitelist(X, [Op | Script])
  when element(1, Op) =:= 'fun' ->
    whitelist(X, Script);
 
+whitelist(X, [Op | Script])
+ when element(1, Op) =:= 'op' ->
+   [Op | whitelist(X, Script)];
+
 whitelist(_, []) ->
    [].
 

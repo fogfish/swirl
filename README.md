@@ -9,7 +9,7 @@ The template is blob, it defines a data binding rules and responsible to format 
 
 The template uses dot-bind notation to declare data mapping (e.g. `a.b.c`). The renderer engine uses this notation to iterate data structure along the path to specified value. 
 
-The library provides `swirl:f()` api. It take template as input and returns partial application. The partial application takes two parameters using curring: scope and data structure. The scope is used to prefix each mapping declared in template. The data structure is nested map key-value pairs. There is an utility function `swirl:apply()` that does curring-and-apply automatically for any given template... 
+The library provides `swirl:f()` api. It take template as input and returns partial application. The partial application takes two parameters using curring: scope and data structure. The scope is used to prefix each mapping declared in template (expand the binding path with prefix). The data structure is nested map key-value pairs. There is an utility function `swirl:apply()` that does curring-and-apply automatically for any given template... 
 
 ```erlang
 Fun0 = swirl:f("I am {name}!").  %% define template
@@ -83,7 +83,7 @@ The `if` statements displays section only if variable is truth. The statements s
 
 ### foreach
 
-The `for` statements iterates over variables in array. 
+The `for` statements iterates over variables in lists. 
 
 ```
    {for x in a.b.c}
@@ -91,12 +91,21 @@ The `for` statements iterates over variables in array.
    {/for}
 ```
 
-The loop context defines special variable `@head` and `@tail` to 
+The loop context defines special variable `@head` and `@tail` to check the element position
 ```
    {for x in a.b.c}
       {if @head.x}<h4>***</h4>{/if}
       <p>{x}</p>
    {/for}
+```
+
+There is a syntax sugar to merge `if` and `for` statements to render template if list is not defined.
+```
+{for x in text}
+   <p>{x}</p>
+{else}
+   <p>Nothing to show</p>
+{/for}
 ```
 
 ### partial
@@ -201,6 +210,23 @@ The library implement a command line tool for beam-file compilation
 ```erlang
    article:f(#{tags => ["a", "b", "c"], content => "Lorem ipsum dolor sit amet"}).
 ```
+
+### evil eval
+
+The library extends the whiskers.js with evil evaluation function `{. .}`. The scope of evaluation is restricted to allowed functions defined by context.
+
+```
+   swirl:apply(
+      "{.erlang:list_to_binary(\"hello\").}", 
+      [{'@eval', 
+         [{erlang, 
+            [{list_to_binary, true}]
+         }]
+      }]
+   ).
+```
+
+
 
 
 
