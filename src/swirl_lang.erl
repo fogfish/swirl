@@ -112,7 +112,10 @@ eval(Expr, X) ->
       []    ->
          [];
       Exprs ->
-         case erl_eval:exprs(Exprs, []) of
+         %% We bind active context to C variable and pass it to evaluator
+         %% this is not a perfect solution but allows to inject context
+         Bind = erl_eval:add_binding('C', X, erl_eval:new_bindings()),
+         case erl_eval:exprs(Exprs, Bind) of
             {value, Value, _} when is_list(Value) orelse is_binary(Value) ->
                Value;
             _ ->
