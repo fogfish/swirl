@@ -27,7 +27,7 @@
 
 %%
 %% return partial application from input template  
--spec(f/1 :: (list()) -> function()).
+-spec f(list()) -> function().
 
 f(T)
  when is_binary(T) orelse is_list(T) ->
@@ -50,8 +50,8 @@ f(T)
 
 %%
 %% compile template to abstract syntax tree 
--spec(c/1 :: (list()) -> {ok, any()}).
--spec(c/2 :: (atom(), list()) -> {ok, atom(), binary()}).
+-spec c(list()) -> {ok, any()}.
+-spec c(atom(), list()) -> {ok, atom(), binary()}.
 
 c(T)
  when is_binary(T) orelse is_list(T) ->
@@ -64,8 +64,8 @@ c(Id, T)
 
 %%
 %% helper evaluate template
--spec(apply/2 :: (function(), any()) -> binary()).
--spec(apply/3 :: (function(), atom() | [atom()], any()) -> binary()).
+-spec apply(function(), any()) -> binary().
+-spec apply(function(), atom() | [atom()], any()) -> binary().
 
 apply(Fun, X) ->
    swirl:apply(Fun, undefined, X).
@@ -81,7 +81,7 @@ apply(T, Y, X) ->
 
 %%
 %% command line utility
--spec(main/1 :: (list()) -> ok).
+-spec main(list()) -> ok.
 
 main(Args) ->
    swirl_tool:main(Args).
